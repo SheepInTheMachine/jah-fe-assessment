@@ -10,6 +10,7 @@ export interface ContentTreeProps {
     expandedIds: ReadonlySet<string>;
     onSelect: (id: string) => void;
     onToggle: (id: string) => void;
+    onMoveRequest: (id: string) => void;
 }
 
 /**
@@ -17,9 +18,11 @@ export interface ContentTreeProps {
  * the focus, Enter or Space selects. Rows are rendered as a flat list of memoized
  * items so that a selection change only re-renders the two rows it touches.
  */
-export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}: ContentTreeProps) {
+export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle, onMoveRequest}: ContentTreeProps) {
     const rows = useMemo(() => flattenVisible(root, expandedIds), [root, expandedIds]);
     const [focusedId, setFocusedId] = useState<string>(root.id);
+    // Track the hovered row to prepare for drag-and-drop support.
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // The focused row can disappear when a parent collapses or the fixture
@@ -117,8 +120,11 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
                     isFocused={row.node.id === safeFocusedId}
                     setSize={row.setSize}
                     posInSet={row.posInSet}
+                    hoveredId={hoveredId}
+                    onHover={setHoveredId}
                     onToggle={onToggle}
                     onSelect={handleSelect}
+                    onMoveRequest={() => onMoveRequest(row.node.id)}
                 />
             ))}
         </div>

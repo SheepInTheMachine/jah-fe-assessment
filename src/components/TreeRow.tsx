@@ -14,8 +14,11 @@ export interface TreeRowProps {
     isFocused: boolean;
     setSize: number;
     posInSet: number;
+    hoveredId: string | null;
+    onHover: (id: string | null) => void;
     onToggle: (id: string) => void;
     onSelect: (id: string) => void;
+    onMoveRequest: () => void;
 }
 
 function typeIcon(type: NodeType, isExpanded: boolean) {
@@ -34,7 +37,7 @@ function typeIcon(type: NodeType, isExpanded: boolean) {
 }
 
 export const TreeRow = memo(function TreeRow({
-    id, name, type, depth, hasChildren, isExpanded, isSelected, isFocused, setSize, posInSet, onToggle, onSelect
+    id, name, type, depth, hasChildren, isExpanded, isSelected, isFocused, setSize, posInSet, hoveredId, onHover, onToggle, onSelect, onMoveRequest
 }: TreeRowProps) {
     return (
         <div
@@ -46,9 +49,11 @@ export const TreeRow = memo(function TreeRow({
             aria-selected={isSelected}
             aria-expanded={hasChildren ? isExpanded : undefined}
             tabIndex={isFocused ? 0 : -1}
-            className={isSelected ? 'treeRow treeRow_selected' : 'treeRow'}
+            className={['treeRow', isSelected ? 'treeRow_selected' : '', hoveredId === id ? 'treeRow_hovered' : ''].join(' ').trim()}
             style={{'--depth': depth} as CSSProperties}
             onClick={() => onSelect(id)}
+            onMouseEnter={() => onHover(id)}
+            onMouseLeave={() => onHover(null)}
         >
             {hasChildren ? (
                 <Button
@@ -65,6 +70,17 @@ export const TreeRow = memo(function TreeRow({
             ) : <span className="treeRow_spacer"/>}
             {typeIcon(type, isExpanded)}
             <Typography isNowrap variant="body">{name}</Typography>
+            {isSelected && (
+                <span
+                    className="treeRow_move"
+                    onClick={event => {
+                        event.stopPropagation();
+                        onMoveRequest();
+                    }}
+                >
+                    Move…
+                </span>
+            )}
         </div>
     );
 });
