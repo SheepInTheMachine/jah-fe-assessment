@@ -1,0 +1,120 @@
+:root {
+    color-scheme: light;
+}
+
+body {
+    margin: 0;
+    font-family: 'Nunito Sans', -apple-system, 'Segoe UI', sans-serif;
+    background: #fafafa;
+    color: #131c21;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #d9dfe3;
+    background: #fff;
+}
+
+.toolbar_actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar_separator {
+    width: 1px;
+    height: 24px;
+    background: #d9dfe3;
+}
+
+.toolbar_count {
+    color: #5f7280;
+}
+
+.app_main {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(240px, 360px);
+    flex: 1;
+    min-height: 0;
+}
+
+.contentTree {
+    overflow: auto;
+    padding: 8px;
+}
+
+/* --depth comes from the row itself: indentation carries the hierarchy. */
+.treeRow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    padding-left: calc(8px + (var(--depth) - 1) * 16px);
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.treeRow:hover {
+    background: #eef1f3;
+}
+
+.treeRow_selected,
+.treeRow_selected:hover {
+    background: #d4e6f5;
+}
+
+.treeRow:focus-visible {
+    outline: 2px solid #0b6bb8;
+    outline-offset: -2px;
+}
+
+.treeRow_spacer {
+    flex: none;
+    width: 24px;
+}
+
+.nodeDetails {
+    padding: 16px;
+    border-left: 1px solid #d9dfe3;
+    background: #fff;
+    overflow: auto;
+}
+
+.nodeDetails dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 16px 0 0;
+}
+
+.nodeDetails dt {
+    font-weight: 600;
+}
+
+.nodeDetails dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .app_main {
+        grid-template-columns: 1fr;
+    }
+
+    .nodeDetails {
+        border-left: none;
+        border-top: 1px solid #d9dfe3;
+    }
+}
