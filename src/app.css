@@ -118,3 +118,67 @@ body {
         border-top: 1px solid #d9dfe3;
     }
 }
+
+/* Move action and dialog */
+.treeRow_hovered {
+    background: #eef1f3;
+}
+
+.treeRow_move {
+    margin-left: auto;
+    color: #0b6bb8;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.treeRow_move:hover {
+    text-decoration: underline;
+}
+
+.moveDialog_backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(19, 28, 33, 0.4);
+}
+
+.moveDialog {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: min(480px, 90vw);
+    max-height: 70vh;
+    padding: 16px;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.moveDialog_list {
+    overflow: auto;
+    border: 1px solid #d9dfe3;
+    border-radius: 4px;
+}
+
+.moveDialog_item {
+    padding: 4px 8px;
+    padding-left: calc(8px + (var(--depth) - 1) * 16px);
+    cursor: pointer;
+}
+
+.moveDialog_item:hover {
+    background: #eef1f3;
+}
+
+.moveDialog_item_disabled,
+.moveDialog_item_disabled:hover {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: none;
+}
+
+.moveDialog_footer {
+    display: flex;
+    justify-content: flex-end;
+}

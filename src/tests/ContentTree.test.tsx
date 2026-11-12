@@ -46,6 +46,7 @@ function Harness({onSelect = () => {}}: {onSelect?: (id: string) => void}) {
                     return next;
                 });
             }}
+            onMoveRequest={() => {}}
         />
     );
 }
