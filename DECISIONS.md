@@ -19,10 +19,10 @@
 `What I asked for, what it got wrong, what I rejected or rewrote, and why.`
 
 ---
-- I started by adding a few rules based on what I learned while reviewing the code.
+I started by adding a few rules based on what I learned while reviewing the code.
   - I could have added more rules, but I prefer to add them as needed. This keeps the context from getting bloated. Plus Cursor's defaults are pretty good.
 ----
-- Instead of trying to create the feature in one shot, I started with selecting multiple nods and showing the deepest common ancestor.
+Instead of trying to create the feature in one shot, I started with selecting multiple nods and showing the deepest common ancestor.
 - While I sometimes use the keyboard when navigating file systems, I prefer to use my mouse when dealing with batches of files.
 - See: `ai-session/1_cursor_deepest_common_ancestor_feature.md`
 - The result was pretty good. I didn't think to specify that holding shift should enable selecting chunks.
@@ -32,6 +32,9 @@
   -  Also I'm on a mac. The shortcuts for selection use cmd, but on windows they would use ctrl. After looking at the implementation I saw that I has nothing to worry about.
 - I noticed there was a delay when selecting the files when there are 10,000 modes and everything is open. 
 ---
+At this point I wanted to improve the performance of the app before implementing movement. I kept all the suggestions suggestions produced by the agent since they met my requirements.
+
+
 
 
 ## Gaps in the brief

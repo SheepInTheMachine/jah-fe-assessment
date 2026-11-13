@@ -1,11 +1,11 @@
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {useCallback, useRef, useState} from 'react';
+import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 import {describe, expect, it, vi} from 'vitest';
 import {ContentTree} from '../components/ContentTree';
 import type {TreeSelectModifiers} from '../components/treeSelection';
-import {flattenVisible} from '../model/tree';
 import type {ContentNode} from '../model/types';
+import {useTreeSelection} from '../state/useTreeSelection';
 
 const fixture: ContentNode = {
     id: 'root',
@@ -24,59 +24,32 @@ const fixture: ContentNode = {
     ]
 };
 
-function useTreeSelection(expandedIds: ReadonlySet<string>) {
-    const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
-    const anchorRef = useRef<string | null>(null);
-
-    const applySelection = useCallback((id: string, modifiers: TreeSelectModifiers) => {
-        const visibleIds = flattenVisible(fixture, expandedIds).map(row => row.node.id);
-        let next: Set<string>;
-
-        if (modifiers.range && anchorRef.current !== null) {
-            const anchorIndex = visibleIds.indexOf(anchorRef.current);
-            const targetIndex = visibleIds.indexOf(id);
-            if (anchorIndex === -1 || targetIndex === -1) {
-                next = new Set([id]);
-            } else {
-                const [start, end] = anchorIndex < targetIndex
-                    ? [anchorIndex, targetIndex]
-                    : [targetIndex, anchorIndex];
-                next = new Set(visibleIds.slice(start, end + 1));
-            }
-        } else if (modifiers.additive) {
-            next = new Set(selectedIds);
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-        } else {
-            next = new Set([id]);
-        }
-
-        if (!modifiers.range) {
-            anchorRef.current = id;
-        }
-
-        setSelectedIds(next);
-        return next;
-    }, [expandedIds, selectedIds]);
-
-    return {selectedIds, applySelection};
-}
-
 function Harness({onSelect = () => {}}: {onSelect?: (id: string, modifiers: TreeSelectModifiers) => void}) {
     const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(new Set(['root']));
-    const {selectedIds, applySelection} = useTreeSelection(expandedIds);
+    const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+    const onSelectedIdsChange = useCallback((ids: string[]) => {
+        setSelectedIds(new Set(ids));
+    }, []);
+    const {handleSelect} = useTreeSelection({
+        root: fixture,
+        expandedIds,
+        selectedIds,
+        onSelectedIdsChange
+    });
+    const onSelectRef = useRef(onSelect);
+    useLayoutEffect(() => {
+        onSelectRef.current = onSelect;
+    }, [onSelect]);
+    const handleSelectWithSpy = useCallback((id: string, modifiers: TreeSelectModifiers) => {
+        handleSelect(id, modifiers);
+        onSelectRef.current(id, modifiers);
+    }, [handleSelect]);
     return (
         <ContentTree
             root={fixture}
             selectedIds={selectedIds}
             expandedIds={expandedIds}
-            onSelect={(id, modifiers) => {
-                applySelection(id, modifiers);
-                onSelect(id, modifiers);
-            }}
+            onSelect={handleSelectWithSpy}
             onToggle={id => {
                 setExpandedIds(prev => {
                     const next = new Set(prev);
