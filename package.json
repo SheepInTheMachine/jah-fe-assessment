@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:perf": "VITEST_PERF=1 vitest run --testTimeout=600000 src/tests/selectionPerformance.large.test.tsx"
   },
   "dependencies": {
     "@jahia/moonstone": "^2.21.1",

@@ -41,7 +41,12 @@ See: `ai-session/4_cursor_node_movement_feature_suggestion.md`
 ---
 I put together a brief for batch movement and handed it off to the agent.
 - Unlike the PR I reviewed, focus was no on the tree when the modal opened. If I clicked `tab` focus would be on the tree in side the modal. I wasn't sure if that was the correct behavior so I ran it by the agent.
-- Once the above issue was fixed I tried it out again in the browser and was happy with the result.
+- Once the above issue was resolved, I committed the results.
+See: `ai-session/5_cursor_node_movement_functionality.md`
+---
+The last thing was verifying that everything was done. While the test coverage was okay, I didn't have any ways to test/prove that the app wasn't laggy when the tree had 10k nodes.
+See: The last file in `ai-sessions`
+
 
 ## Gaps in the brief
 `- The question, what I decided (or assumed), and why.`
@@ -77,5 +82,5 @@ What other changes need to be made to the node details panel?
 ## Not built
 `- What I left out, and why.`
 - The main thing I left out was drag and drop. It was something I considered but felt outside the scope of the feature.
-- 
+- I noticed that the children weren't automatically selected when the parent is selected. While I don't think this is a problem, it gives the user less visual noise.... They probably should have been. At this point though, I had spent about 3 hours on the assignment and didn't want to spend more time on it.
 
