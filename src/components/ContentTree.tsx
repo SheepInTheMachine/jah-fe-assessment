@@ -3,12 +3,13 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {flattenVisible} from '../model/tree';
 import type {ContentNode} from '../model/types';
 import {TreeRow} from './TreeRow';
+import type {TreeSelectModifiers} from './treeSelection';
 
 export interface ContentTreeProps {
     root: ContentNode;
-    selectedId: string | null;
+    selectedIds: ReadonlySet<string>;
     expandedIds: ReadonlySet<string>;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, modifiers: TreeSelectModifiers) => void;
     onToggle: (id: string) => void;
 }
 
@@ -17,7 +18,7 @@ export interface ContentTreeProps {
  * the focus, Enter or Space selects. Rows are rendered as a flat list of memoized
  * items so that a selection change only re-renders the two rows it touches.
  */
-export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}: ContentTreeProps) {
+export function ContentTree({root, selectedIds, expandedIds, onSelect, onToggle}: ContentTreeProps) {
     const rows = useMemo(() => flattenVisible(root, expandedIds), [root, expandedIds]);
     const [focusedId, setFocusedId] = useState<string>(root.id);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -36,9 +37,9 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
         }
     }, [safeFocusedId]);
 
-    const handleSelect = useCallback((id: string) => {
+    const handleSelect = useCallback((id: string, modifiers: TreeSelectModifiers) => {
         setFocusedId(id);
-        onSelect(id);
+        onSelect(id, modifiers);
     }, [onSelect]);
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -93,7 +94,10 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
                 break;
             case 'Enter':
             case ' ':
-                handleSelect(row.node.id);
+                handleSelect(row.node.id, {
+                    additive: event.ctrlKey || event.metaKey,
+                    range: event.shiftKey
+                });
                 break;
             default:
                 return;
@@ -113,7 +117,7 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
                     depth={row.depth}
                     hasChildren={row.node.children.length > 0}
                     isExpanded={expandedIds.has(row.node.id)}
-                    isSelected={row.node.id === selectedId}
+                    isSelected={selectedIds.has(row.node.id)}
                     isFocused={row.node.id === safeFocusedId}
                     setSize={row.setSize}
                     posInSet={row.posInSet}

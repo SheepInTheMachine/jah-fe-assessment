@@ -2,6 +2,7 @@ import type {CSSProperties} from 'react';
 import {memo} from 'react';
 import {Button, ChevronDown, ChevronRight, FileContent, FileImage, Folder, FolderOpen, Page, SiteWeb, Typography} from '@jahia/moonstone';
 import type {NodeType} from '../model/types';
+import type {TreeSelectModifiers} from './treeSelection';
 
 export interface TreeRowProps {
     id: string;
@@ -15,7 +16,7 @@ export interface TreeRowProps {
     setSize: number;
     posInSet: number;
     onToggle: (id: string) => void;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, modifiers: TreeSelectModifiers) => void;
 }
 
 function typeIcon(type: NodeType, isExpanded: boolean) {
@@ -48,7 +49,10 @@ export const TreeRow = memo(function TreeRow({
             tabIndex={isFocused ? 0 : -1}
             className={isSelected ? 'treeRow treeRow_selected' : 'treeRow'}
             style={{'--depth': depth} as CSSProperties}
-            onClick={() => onSelect(id)}
+            onClick={event => onSelect(id, {
+                additive: event.ctrlKey || event.metaKey,
+                range: event.shiftKey
+            })}
         >
             {hasChildren ? (
                 <Button

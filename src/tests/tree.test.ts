@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {FIXTURE_SIZES, generateTree, getFixture} from '../fixtures/generate';
-import {countNodes, flattenVisible, getPath, indexTree} from '../model/tree';
+import {countNodes, flattenVisible, getDeepestCommonAncestor, getPath, indexTree} from '../model/tree';
 
 describe('fixtures', () => {
     it('generates deterministic trees', () => {
@@ -53,6 +53,34 @@ describe('indexTree / getPath', () => {
 
     it('throws on an unknown id', () => {
         expect(() => getPath(index, 'nope')).toThrow('Unknown node id');
+    });
+});
+
+describe('getDeepestCommonAncestor', () => {
+    const root = getFixture('small');
+    const index = indexTree(root);
+
+    it('returns null for an empty selection', () => {
+        expect(getDeepestCommonAncestor(index, [])).toBeNull();
+    });
+
+    it('returns the node itself for a single id', () => {
+        const leaf = [...index.entries()].find(([, entry]) => entry.node.children.length === 0)!;
+        expect(getDeepestCommonAncestor(index, [leaf[0]])).toBe(leaf[0]);
+    });
+
+    it('returns the root when the selection spans different branches', () => {
+        const depthTwo = [...index.entries()].filter(([, entry]) => entry.depth === 2).map(([id]) => id);
+        expect(depthTwo.length).toBeGreaterThanOrEqual(2);
+        expect(getDeepestCommonAncestor(index, depthTwo.slice(0, 2))).toBe(root.id);
+    });
+
+    it('returns the parent when one selected node contains another', () => {
+        const nested = [...index.entries()].find(([, entry]) => {
+            return entry.node.children.length > 0 && entry.node.children.some(child => child.children.length === 0);
+        })!;
+        const childId = nested[1].node.children[0]!.id;
+        expect(getDeepestCommonAncestor(index, [nested[0], childId])).toBe(nested[0]);
     });
 });
 
