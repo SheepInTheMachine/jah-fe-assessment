@@ -30,11 +30,14 @@ Instead of trying to create the feature in one shot, I started with selecting mu
 - I then opened up my browser to try out the feature.
 -   The only part I felt unsatisfied with was how to de-select multiple nodes. After trying it out a bit more, I decided it was fine. In the `main` branch after a user selects a node, the only way to de-select it is by changing the selection. This implementation felt consistent with the current behavior.
   -  Also I'm on a mac. The shortcuts for selection use cmd, but on windows they would use ctrl. After looking at the implementation I saw that I has nothing to worry about.
-- I noticed there was a delay when selecting the files when there are 10,000 modes and everything is open. 
+- I noticed there was a delay when selecting the files when there are 10,000 modes and everything is open.
+See: `ai-session/1_cursor_deepest_common_ancestor_feature.md` and `ai-session/2_cursor_control_enter_selection_test.md` 
 ---
-At this point I wanted to improve the performance of the app before implementing movement. I kept all the suggestions suggestions produced by the agent since they met my requirements.
-
-
+I wanted to improve the performance of the app before implementing movement. I kept all the suggestions suggestions produced by the agent since they met my requirements.
+See: `ai-session/3_cursor_contenttree_optimization_options.md`
+--- 
+I wasn't sure about the best way to implement movement due to the brief. So I decided to rubber duck with the agent. 
+See: `ai-session/4_cursor_node_movement_feature_suggestion.md`
 
 
 ## Gaps in the brief
