@@ -1,17 +1,18 @@
-import {Chip, Typography} from '@jahia/moonstone';
+import {Button, Chip, Typography} from '@jahia/moonstone';
 import type {TreeIndex} from '../model/tree';
 import {getDeepestCommonAncestor, getPath} from '../model/tree';
 
 export interface NodeDetailsProps {
     index: TreeIndex;
     selectedIds: ReadonlySet<string>;
+    onOpenMove?: () => void;
 }
 
 function pathLabel(index: TreeIndex, id: string): string {
     return `/${getPath(index, id).map(pathId => index.get(pathId)!.node.name).join('/')}`;
 }
 
-export function NodeDetails({index, selectedIds}: NodeDetailsProps) {
+export function NodeDetails({index, selectedIds, onOpenMove}: NodeDetailsProps) {
     if (selectedIds.size === 0) {
         return (
             <aside aria-label="Node details" className="nodeDetails">
@@ -47,6 +48,11 @@ export function NodeDetails({index, selectedIds}: NodeDetailsProps) {
                 <Typography variant="heading">
                     {selectedEntries.length === 1 ? 'Selected node' : `Selected nodes (${selectedEntries.length})`}
                 </Typography>
+                {onOpenMove && (
+                    <div className="nodeDetails_move">
+                        <Button label="Move Selection" variant="default" onClick={onOpenMove}/>
+                    </div>
+                )}
                 <ul className="nodeDetails_list">
                     {selectedEntries.map(entry => (
                         <li key={entry.node.id} className="nodeDetails_listItem">

@@ -51,4 +51,9 @@ describe('NodeDetails', () => {
         expect(ancestor).toHaveTextContent('Alpha');
         expect(ancestor).toHaveTextContent('/Site/Alpha');
     });
+
+    it('shows Move Selection when a handler is provided', () => {
+        render(<NodeDetails index={index} selectedIds={new Set(['beta'])} onOpenMove={() => {}}/>);
+        expect(screen.getByRole('button', {name: 'Move Selection'})).toBeInTheDocument();
+    });
 });

@@ -38,7 +38,10 @@ See: `ai-session/3_cursor_contenttree_optimization_options.md`
 --- 
 I wasn't sure about the best way to implement movement due to the brief. So I decided to rubber duck with the agent. 
 See: `ai-session/4_cursor_node_movement_feature_suggestion.md`
-
+---
+I put together a brief for batch movement and handed it off to the agent.
+- Unlike the PR I reviewed, focus was no on the tree when the modal opened. If I clicked `tab` focus would be on the tree in side the modal. I wasn't sure if that was the correct behavior so I ran it by the agent.
+- Once the above issue was fixed I tried it out again in the browser and was happy with the result.
 
 ## Gaps in the brief
 `- The question, what I decided (or assumed), and why.`
