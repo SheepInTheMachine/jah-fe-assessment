@@ -1,0 +1,41 @@
+---
+description: Use @jahia/moonstone for UI in React components (Jahia assessment)
+globs: src/components/**/*.tsx,src/App.tsx
+alwaysApply: false
+---
+
+# Moonstone UI
+
+This project uses [@jahia/moonstone](https://github.com/Jahia/moonstone) as its design system. Do not add other component libraries.
+
+## Defaults
+
+| Need          | Use                                                                      |
+| ------------- | ------------------------------------------------------------------------ |
+| Buttons       | `Button` (`label`, `variant`, `onClick`; use `aria-pressed` for toggles) |
+| Text / titles | `Typography` (`variant` such as `title`)                                 |
+| Small labels  | `Chip`                                                                   |
+| Icons         | Moonstone icon components (e.g. `ChevronDown`, `Folder`)                 |
+
+Import from a single entry:
+
+```tsx
+import { Button, Typography } from "@jahia/moonstone";
+```
+
+Match existing components: `src/components/Toolbar.tsx`, `TreeRow.tsx`, `NodeDetails.tsx`.
+
+## Layout and styling
+
+- Use existing CSS classes in `src/app.css` for layout (e.g. `toolbar`, tree rows). Moonstone covers controls and typography, not full page layout.
+- Prefer Moonstone `Button` / `Typography` over raw `<button>` or unstyled text for new UI.
+
+## Exceptions
+
+- **Tree a11y**: Keep WAI-ARIA tree roles, roving tabindex, and keyboard handling as custom markup in `ContentTree` / `TreeRow`; do not replace the tree with a generic Moonstone widget unless the task explicitly asks for it.
+- **Tests** (`src/tests/**`): Use Testing Library; no requirement to render Moonstone in tests unless asserting UI copy or roles.
+
+## Out of scope
+
+- No new UI dependencies (MUI, Radix kits, shadcn, etc.).
+- `vite.config.ts` already inlines `@jahia/moonstone`; leave that as-is unless build breaks.

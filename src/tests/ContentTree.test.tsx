@@ -1,9 +1,11 @@
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {useState} from 'react';
+import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 import {describe, expect, it, vi} from 'vitest';
 import {ContentTree} from '../components/ContentTree';
+import type {TreeSelectModifiers} from '../components/treeSelection';
 import type {ContentNode} from '../model/types';
+import {useTreeSelection} from '../state/useTreeSelection';
 
 const fixture: ContentNode = {
     id: 'root',
@@ -22,18 +24,32 @@ const fixture: ContentNode = {
     ]
 };
 
-function Harness({onSelect = () => {}}: {onSelect?: (id: string) => void}) {
+function Harness({onSelect = () => {}}: {onSelect?: (id: string, modifiers: TreeSelectModifiers) => void}) {
     const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(new Set(['root']));
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+    const onSelectedIdsChange = useCallback((ids: string[]) => {
+        setSelectedIds(new Set(ids));
+    }, []);
+    const {handleSelect} = useTreeSelection({
+        root: fixture,
+        expandedIds,
+        selectedIds,
+        onSelectedIdsChange
+    });
+    const onSelectRef = useRef(onSelect);
+    useLayoutEffect(() => {
+        onSelectRef.current = onSelect;
+    }, [onSelect]);
+    const handleSelectWithSpy = useCallback((id: string, modifiers: TreeSelectModifiers) => {
+        handleSelect(id, modifiers);
+        onSelectRef.current(id, modifiers);
+    }, [handleSelect]);
     return (
         <ContentTree
             root={fixture}
-            selectedId={selectedId}
+            selectedIds={selectedIds}
             expandedIds={expandedIds}
-            onSelect={id => {
-                setSelectedId(id);
-                onSelect(id);
-            }}
+            onSelect={handleSelectWithSpy}
             onToggle={id => {
                 setExpandedIds(prev => {
                     const next = new Set(prev);
@@ -75,9 +91,32 @@ describe('ContentTree', () => {
         const onSelect = vi.fn();
         render(<Harness onSelect={onSelect}/>);
         await user.click(screen.getByText('Beta'));
-        expect(onSelect).toHaveBeenCalledWith('beta');
+        expect(onSelect).toHaveBeenCalledWith('beta', {additive: false, range: false});
         expect(screen.getByRole('treeitem', {name: /Beta/}))
             .toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('toggles a node in the selection with ctrl+click', async () => {
+        const user = userEvent.setup();
+        render(<Harness/>);
+        await user.click(screen.getByText('Beta'));
+        await user.keyboard('{Control>}');
+        await user.click(screen.getByText('Alpha'));
+        await user.keyboard('{/Control}');
+        expect(screen.getByRole('treeitem', {name: /Beta/})).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByRole('treeitem', {name: /Alpha/})).toHaveAttribute('aria-selected', 'true');
+    });
+
+    it('selects a visible range with shift+click', async () => {
+        const user = userEvent.setup();
+        render(<Harness/>);
+        await user.click(screen.getByText('Beta'));
+        await user.keyboard('{Shift>}');
+        await user.click(screen.getByText('Alpha'));
+        await user.keyboard('{/Shift}');
+        expect(screen.getByRole('treeitem', {name: /Alpha/})).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByRole('treeitem', {name: /Beta/})).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByRole('treeitem', {name: /Site/})).toHaveAttribute('aria-selected', 'false');
     });
 
     it('moves the focus with the arrow keys and selects with Enter', async () => {
@@ -89,7 +128,18 @@ describe('ContentTree', () => {
         await user.keyboard('{ArrowDown}');
         expect(screen.getByRole('treeitem', {name: /Alpha/})).toHaveFocus();
         await user.keyboard('{Enter}');
-        expect(onSelect).toHaveBeenCalledWith('alpha');
+        expect(onSelect).toHaveBeenCalledWith('alpha', {additive: false, range: false});
+    });
+
+    it('toggles selection with control+space', async () => {
+        const user = userEvent.setup();
+        render(<Harness/>);
+        const [rootRow] = screen.getAllByRole('treeitem');
+        rootRow.focus();
+        await user.keyboard('{ArrowDown}{Control>}{ }{/Control}');
+        expect(screen.getByRole('treeitem', {name: /Alpha/})).toHaveAttribute('aria-selected', 'true');
+        await user.keyboard('{Control>}{ }{/Control}');
+        expect(screen.getByRole('treeitem', {name: /Alpha/})).toHaveAttribute('aria-selected', 'false');
     });
 
     it('expands a collapsed node with ArrowRight', async () => {

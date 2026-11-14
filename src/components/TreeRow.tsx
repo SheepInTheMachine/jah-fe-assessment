@@ -2,6 +2,7 @@ import type {CSSProperties} from 'react';
 import {memo} from 'react';
 import {Button, ChevronDown, ChevronRight, FileContent, FileImage, Folder, FolderOpen, Page, SiteWeb, Typography} from '@jahia/moonstone';
 import type {NodeType} from '../model/types';
+import type {TreeSelectModifiers} from './treeSelection';
 
 export interface TreeRowProps {
     id: string;
@@ -12,10 +13,11 @@ export interface TreeRowProps {
     isExpanded: boolean;
     isSelected: boolean;
     isFocused: boolean;
+    isDisabled?: boolean;
     setSize: number;
     posInSet: number;
     onToggle: (id: string) => void;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, modifiers: TreeSelectModifiers) => void;
 }
 
 function typeIcon(type: NodeType, isExpanded: boolean) {
@@ -34,8 +36,15 @@ function typeIcon(type: NodeType, isExpanded: boolean) {
 }
 
 export const TreeRow = memo(function TreeRow({
-    id, name, type, depth, hasChildren, isExpanded, isSelected, isFocused, setSize, posInSet, onToggle, onSelect
+    id, name, type, depth, hasChildren, isExpanded, isSelected, isFocused, isDisabled = false, setSize, posInSet,
+    onToggle, onSelect
 }: TreeRowProps) {
+    const rowClass = [
+        'treeRow',
+        isSelected ? 'treeRow_selected' : '',
+        isDisabled ? 'treeRow_disabled' : ''
+    ].filter(Boolean).join(' ');
+
     return (
         <div
             role="treeitem"
@@ -44,11 +53,21 @@ export const TreeRow = memo(function TreeRow({
             aria-setsize={setSize}
             aria-posinset={posInSet}
             aria-selected={isSelected}
+            aria-disabled={isDisabled || undefined}
             aria-expanded={hasChildren ? isExpanded : undefined}
             tabIndex={isFocused ? 0 : -1}
-            className={isSelected ? 'treeRow treeRow_selected' : 'treeRow'}
+            className={rowClass}
             style={{'--depth': depth} as CSSProperties}
-            onClick={() => onSelect(id)}
+            onClick={event => {
+                if (isDisabled) {
+                    return;
+                }
+
+                onSelect(id, {
+                    additive: event.ctrlKey || event.metaKey,
+                    range: event.shiftKey
+                });
+            }}
         >
             {hasChildren ? (
                 <Button

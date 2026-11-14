@@ -1,15 +1,22 @@
-import type {KeyboardEvent} from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import type {FocusEvent, KeyboardEvent, MutableRefObject} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {flattenVisible} from '../model/tree';
 import type {ContentNode} from '../model/types';
 import {TreeRow} from './TreeRow';
+import type {TreeSelectModifiers} from './treeSelection';
 
 export interface ContentTreeProps {
     root: ContentNode;
-    selectedId: string | null;
+    selectedIds: ReadonlySet<string>;
     expandedIds: ReadonlySet<string>;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, modifiers: TreeSelectModifiers) => void;
     onToggle: (id: string) => void;
+    onRequestMove?: () => void;
+    focusNodeId?: string | null;
+    onFocusNodeApplied?: () => void;
+    treeFocusRef?: MutableRefObject<HTMLDivElement | null>;
+    /** When true, the main tree will not move DOM focus (e.g. while a modal is open). */
+    pauseFocusSync?: boolean;
 }
 
 /**
@@ -17,29 +24,65 @@ export interface ContentTreeProps {
  * the focus, Enter or Space selects. Rows are rendered as a flat list of memoized
  * items so that a selection change only re-renders the two rows it touches.
  */
-export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}: ContentTreeProps) {
+export function ContentTree({
+    root, selectedIds, expandedIds, onSelect, onToggle, onRequestMove, focusNodeId, onFocusNodeApplied, treeFocusRef,
+    pauseFocusSync = false
+}: ContentTreeProps) {
     const rows = useMemo(() => flattenVisible(root, expandedIds), [root, expandedIds]);
     const [focusedId, setFocusedId] = useState<string>(root.id);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null) as MutableRefObject<HTMLDivElement | null>;
 
     // The focused row can disappear when a parent collapses or the fixture
     // changes, so every reader goes through this fallback instead of the state.
-    const focusedIndex = rows.findIndex(row => row.node.id === focusedId);
-    const safeFocusedId = focusedIndex === -1 ? rows[0].node.id : focusedId;
+    const activeFocusId = focusNodeId ?? focusedId;
+    const focusedIndex = rows.findIndex(row => row.node.id === activeFocusId);
+    const safeFocusedId = focusedIndex === -1 ? rows[0]!.node.id : activeFocusId;
 
     // Move the DOM focus only when the tree already holds it, so rendering
     // the tree never steals the focus from the rest of the page.
     useEffect(() => {
+        if (pauseFocusSync) {
+            return;
+        }
+
         const container = containerRef.current;
         if (container && container.contains(document.activeElement)) {
             container.querySelector<HTMLElement>(`[data-node-id="${safeFocusedId}"]`)?.focus();
         }
-    }, [safeFocusedId]);
+    }, [pauseFocusSync, safeFocusedId]);
 
-    const handleSelect = useCallback((id: string) => {
+    useLayoutEffect(() => {
+        if (!focusNodeId || !rows.some(row => row.node.id === focusNodeId)) {
+            return;
+        }
+
+        containerRef.current?.querySelector<HTMLElement>(`[data-node-id="${focusNodeId}"]`)?.focus();
+        onFocusNodeApplied?.();
+    }, [focusNodeId, onFocusNodeApplied, rows]);
+
+    const setContainerRef = useCallback((node: HTMLDivElement | null) => {
+        containerRef.current = node;
+        if (treeFocusRef) {
+            treeFocusRef.current = node;
+        }
+    }, [treeFocusRef]);
+
+    const handleSelect = useCallback((id: string, modifiers: TreeSelectModifiers) => {
         setFocusedId(id);
-        onSelect(id);
+        onSelect(id, modifiers);
     }, [onSelect]);
+
+    const onFocusIn = useCallback((event: FocusEvent<HTMLDivElement>) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+            return;
+        }
+
+        const row = target.closest<HTMLElement>('[data-node-id]');
+        if (row?.dataset.nodeId) {
+            setFocusedId(row.dataset.nodeId);
+        }
+    }, []);
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         const index = rows.findIndex(row => row.node.id === safeFocusedId);
@@ -93,8 +136,19 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
                 break;
             case 'Enter':
             case ' ':
-                handleSelect(row.node.id);
+                handleSelect(row.node.id, {
+                    additive: event.ctrlKey || event.metaKey,
+                    range: event.shiftKey
+                });
                 break;
+            case 'm':
+            case 'M':
+                if ((event.ctrlKey || event.metaKey) && event.shiftKey) {
+                    onRequestMove?.();
+                    event.preventDefault();
+                }
+
+                return;
             default:
                 return;
         }
@@ -103,7 +157,15 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
     };
 
     return (
-        <div ref={containerRef} role="tree" aria-label="Content tree" className="contentTree" onKeyDown={onKeyDown}>
+        <div
+            ref={setContainerRef}
+            role="tree"
+            aria-label="Content tree"
+            className="contentTree"
+            tabIndex={-1}
+            onFocusCapture={onFocusIn}
+            onKeyDown={onKeyDown}
+        >
             {rows.map(row => (
                 <TreeRow
                     key={row.node.id}
@@ -113,7 +175,7 @@ export function ContentTree({root, selectedId, expandedIds, onSelect, onToggle}:
                     depth={row.depth}
                     hasChildren={row.node.children.length > 0}
                     isExpanded={expandedIds.has(row.node.id)}
-                    isSelected={row.node.id === selectedId}
+                    isSelected={selectedIds.has(row.node.id)}
                     isFocused={row.node.id === safeFocusedId}
                     setSize={row.setSize}
                     posInSet={row.posInSet}

@@ -8,6 +8,9 @@ export default defineConfig({
         environment: 'jsdom',
         globals: true,
         setupFiles: ['./src/tests/setup.ts'],
+        exclude: process.env.VITEST_PERF === '1'
+            ? ['**/node_modules/**']
+            : ['**/node_modules/**', '**/selectionPerformance.large.test.tsx'],
         server: {
             deps: {
                 // Moonstone ships ESM that imports its own CSS; it must go
