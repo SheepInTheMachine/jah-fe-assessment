@@ -1,5 +1,5 @@
 import type {FocusEvent, KeyboardEvent} from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {flattenVisible} from '../model/tree';
 import type {TreeIndex} from '../model/tree';
 import type {ContentNode} from '../model/types';
